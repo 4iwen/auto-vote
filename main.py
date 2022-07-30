@@ -5,6 +5,9 @@ import datetime
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
+import logging
+
+logging.basicConfig(format='[%(asctime)s][%(levelname)s]: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
 chrome_options = Options()
 chrome_options.add_argument('--headless')
@@ -43,15 +46,15 @@ while True:
 
         captcha_url = f"https://2captcha.com/res.php?key={CAPTCHA_API_KEY}&action=get&id={request_id}&json=1"
 
-        print(f'[{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] voting for "{USERNAME}" every 2 hours')
+        logging.info(f'voting for "{USERNAME}" every 2 hours')
 
         solved = False
         while not solved:
             # retrieve solved captcha
             captcha_response = requests.get(captcha_url)
             if captcha_response.json()['status'] == 0:
-                print(f'[{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [{captcha_response.json()["status"]}] '
-                      f'didnt solve captcha, retrying')
+                logging.info(f'[{captcha_response.json()["status"]}] '
+                             f'didnt solve captcha, retrying')
                 time.sleep(3)
             else:
                 key = captcha_response.json()['request']
@@ -78,13 +81,11 @@ while True:
                 }
 
                 response = requests.post(TARGET_PAGE_URL, data=vote_data, headers=headers)
-                print(f'[{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [{captcha_response.json()["status"]}] '
-                      f'success solving captcha')
-                print(f'[{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}]'
-                      f' waiting 2 hours before submitting another request')
+                logging.info(f'[{captcha_response.json()["status"]}] '
+                             f'success solving captcha')
+                logging.info(f'waiting 2 hours before submitting another request')
                 time.sleep(7200)  # sleep for 2 hours
     except Exception as e:
-        print(e)
-        print(f'[{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}]'
-              f' an exception occurred, trying again in 20 seconds')
+        logging.error(f'\n{e}')
+        logging.error(f'an exception occurred, trying again in 20 seconds')
         time.sleep(20)
